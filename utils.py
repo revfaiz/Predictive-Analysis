@@ -1,8 +1,13 @@
 import pandas as pd
+import logging
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
+
+# Configure logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def read_csv_file(file_path: str) -> pd.DataFrame:
     """
@@ -11,6 +16,7 @@ def read_csv_file(file_path: str) -> pd.DataFrame:
     :param file_path: Path to the CSV file.
     :return: DataFrame containing the CSV data.
     """
+    logger.info(f"Reading CSV file from {file_path}")
     return pd.read_csv(file_path, parse_dates=['Date'])
 
 def calculate_missing_values(df: pd.DataFrame) -> int:
@@ -20,7 +26,9 @@ def calculate_missing_values(df: pd.DataFrame) -> int:
     :param df: The DataFrame.
     :return: The sum of missing values.
     """
-    return df.isnull().sum().sum()
+    missing_values = df.isnull().sum().sum()
+    logger.info(f"Total missing values: {missing_values}")
+    return missing_values
 
 def fill_missing_values(df: pd.DataFrame, column: str, method: str, custom_value=None) -> pd.DataFrame:
     """
@@ -32,6 +40,7 @@ def fill_missing_values(df: pd.DataFrame, column: str, method: str, custom_value
     :param custom_value: The custom value to use if method is "Choose".
     :return: The DataFrame with filled values.
     """
+    logger.info(f"Filling missing values in column '{column}' using method '{method}'")
     if method == "Choose":
         df[column].fillna(custom_value, inplace=True)
     elif method == "Mean":
@@ -57,6 +66,7 @@ def split_data(df: pd.DataFrame, target_column: str, test_size: float):
     :param test_size: The proportion of the dataset to include in the test split.
     :return: X_train, X_test, y_train, y_test
     """
+    logger.info(f"Splitting data with target column '{target_column}' and test size {test_size}")
     features = df.drop(columns=[target_column])
     target = df[target_column]
     X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=test_size, random_state=42)
@@ -71,6 +81,7 @@ def train_model(X_train, y_train, model_type="LinearRegression"):
     :param model_type: The type of model to train.
     :return: Trained model
     """
+    logger.info(f"Training model of type '{model_type}'")
     if model_type == "LinearRegression":
         model = LinearRegression()
     else:
@@ -88,6 +99,7 @@ def evaluate_model(model, X_test, y_test):
     :param y_test: Testing target.
     :return: Dictionary of performance metrics
     """
+    logger.info("Evaluating model")
     y_pred = model.predict(X_test)
     metrics = {
         "accuracy": accuracy_score(y_test, y_pred),
@@ -105,4 +117,5 @@ def predict(model, X_future):
     :param X_future: Future features.
     :return: Predicted values
     """
+    logger.info("Predicting future values")
     return model.predict(X_future)
