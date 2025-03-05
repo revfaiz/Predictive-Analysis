@@ -11,7 +11,10 @@ app = Flask(__name__)
 processor = DataProcessor()
 
 @app.route('/upload', methods=['POST'])
-def upload_file(): 
+def upload_file():
+    """
+    Handles dataset upload.
+    """
     file = request.files['file']
     file_path = f"{file.filename}"
     file.save(file_path)
@@ -20,6 +23,9 @@ def upload_file():
 
 @app.route('/columns', methods=['POST'])
 def get_columns():
+    """
+    Returns the columns and their data types.
+    """
     try:
         columns, column_types = processor.get_columns()
         return jsonify({"columns": columns, "column_types": column_types})
@@ -28,6 +34,9 @@ def get_columns():
 
 @app.route('/fill_missing', methods=['POST'])
 def fill_missing():
+    """
+    Fills missing values in the specified column using the given method.
+    """
     try:
         data = request.json
         column = data.get('column')
@@ -40,6 +49,9 @@ def fill_missing():
 
 @app.route('/missing_values', methods=['POST'])
 def missing_values():
+    """
+    Returns the count of missing values in the dataset.
+    """
     try:
         missing_values_count = processor.calculate_missing()
         return jsonify({"missing_values": int(missing_values_count)})
@@ -48,6 +60,9 @@ def missing_values():
 
 @app.route('/split_data', methods=['POST'])
 def split_data_route():
+    """
+    Splits the dataset into training and testing sets.
+    """
     try:
         data = request.json
         target_column = data.get('target_column')
@@ -59,6 +74,9 @@ def split_data_route():
 
 @app.route('/train_model', methods=['POST'])
 def train_model_route():
+    """
+    Trains a machine learning model using the specified parameters.
+    """
     try:
         data = request.json
         target_column = data.get('target_column')
@@ -73,6 +91,9 @@ def train_model_route():
 
 @app.route('/predict', methods=['POST'])
 def predict_route():
+    """
+    Predicts future values using the trained model.
+    """
     try:
         data = request.json
         X_future = pd.DataFrame(data.get('X_future'))
@@ -80,6 +101,36 @@ def predict_route():
         return jsonify({"predictions": predictions.tolist()})
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/prophet/train', methods=['POST'])
+def train_prophet_model():
+    """
+    Trains a Prophet model using the provided data.
+    """
+    data = request.get_json()
+    response = processor.train_prophet_model(data)
+    return jsonify(response), 200
+
+@app.route('/prophet/predict', methods=['POST'])
+def make_prophet_prediction():
+    """
+    Makes predictions using the trained Prophet model.
+    """
+    data = request.get_json()
+    response = processor.predict_with_prophet(data)
+    return jsonify(response), 200
+
+@app.route('/prophet/convert_columns', methods=['POST'])
+def convert_columns():
+    """
+    Renames and filters columns for Prophet model training.
+    """
+    data = request.get_json()
+    date_column = request.args.get('date_column')
+    target_column = request.args.get('target_column')
+    df = pd.DataFrame(data)
+    df = processor.rename_and_filter_columns(df, date_column, target_column)
+    return df.to_json(orient='records'), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=4432)
