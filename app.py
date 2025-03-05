@@ -102,6 +102,24 @@ def predict_route():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route('/prophet/train', methods=['POST'])
+def train_prophet_model():
+    """
+    Trains a Prophet model using the provided data.
+    """
+    data = request.get_json()
+    response = processor.train_prophet_model(data)
+    return jsonify(response), 200
+
+@app.route('/prophet/predict', methods=['POST'])
+def make_prophet_prediction():
+    """
+    Makes predictions using the trained Prophet model.
+    """
+    data = request.get_json()
+    response = processor.predict_with_prophet(data)
+    return jsonify(response), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=4432)
