@@ -102,35 +102,6 @@ def predict_route():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/prophet/train', methods=['POST'])
-def train_prophet_model():
-    """
-    Trains a Prophet model using the provided data.
-    """
-    data = request.get_json()
-    response = processor.train_prophet_model(data)
-    return jsonify(response), 200
-
-@app.route('/prophet/predict', methods=['POST'])
-def make_prophet_prediction():
-    """
-    Makes predictions using the trained Prophet model.
-    """
-    data = request.get_json()
-    response = processor.predict_with_prophet(data)
-    return jsonify(response), 200
-
-@app.route('/prophet/convert_columns', methods=['POST'])
-def convert_columns():
-    """
-    Renames and filters columns for Prophet model training.
-    """
-    data = request.get_json()
-    date_column = request.args.get('date_column')
-    target_column = request.args.get('target_column')
-    df = pd.DataFrame(data)
-    df = processor.rename_and_filter_columns(df, date_column, target_column)
-    return df.to_json(orient='records'), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=4432)
